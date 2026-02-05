@@ -1,0 +1,1 @@
+Following the LearnWebGPU guide from scratch in the odin languaje
