@@ -1,6 +1,7 @@
 package engine
 
 import "vendor:wgpu"
+import "vendor:wgpu/glfwglue"
 import "vendor:glfw"
 import "core:fmt"
 import "base:runtime"
@@ -12,6 +13,19 @@ state : struct {
 main :: proc() {
 	state.ctx = context
 
+	// ========= glfw =========
+	if !glfw.Init() {
+		panic("[glfw] init failure")
+	}
+	defer glfw.Terminate()
+
+	glfw.WindowHint(glfw.CLIENT_API, glfw.NO_API)
+	window := glfw.CreateWindow(960, 540, "WGPU Native Triangle", nil, nil)
+	if window == nil {
+		panic("Could not open window!")
+	}
+	defer glfw.DestroyWindow(window)
+
 	// ========= create instance =========
 	desc : wgpu.InstanceDescriptor
 	desc.nextInChain = nil
@@ -21,10 +35,15 @@ main :: proc() {
 	}
 	defer wgpu.InstanceRelease(instance)
 	fmt.println("WebGPU is supported")
+
+	// ========= surface =========
+	surface := glfwglue.GetSurface(instance, window)
+	defer wgpu.SurfaceRelease(surface)
 	
 	// ========= request adapter =========
 	adapter_options : wgpu.RequestAdapterOptions
 	adapter_options.nextInChain = nil
+	adapter_options.compatibleSurface = surface
 	adapter := request_adapter(instance, nil)
 	if adapter == nil {
 		panic("request adapter failure")
@@ -47,25 +66,11 @@ main :: proc() {
 	// ========= queue =========
 	queue := wgpu.DeviceGetQueue(device)
 	defer wgpu.QueueRelease(queue)
-
 	queue_info(queue)
-
 	command_encoder(device, queue)
-
 	wgpu.DevicePoll(device, false)
-
-	if !glfw.Init() {
-		panic("[glfw] init failure")
-	}
-	defer glfw.Terminate()
-
-	glfw.WindowHint(glfw.CLIENT_API, glfw.NO_API)
-	window := glfw.CreateWindow(960, 540, "WGPU Native Triangle", nil, nil)
-	if window == nil {
-		panic("Could not open window!")
-	}
-	defer glfw.DestroyWindow(window)
-
+	
+	// ========= infitine loop =========
 	for !glfw.WindowShouldClose(window) {
 		glfw.PollEvents()
 	}
