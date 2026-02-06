@@ -108,6 +108,6 @@ print_adapter_info :: proc(adapter: wgpu.Adapter) {
 	fmt.println("  description: ", info.description)
 	fmt.println("  backend type: ", info.backendType)
 	fmt.println("  adapter type: ", info.adapterType)
-	fmt.printfln("  device id: ", info.deviceID)
+	fmt.println("  device id: ", info.deviceID)
 	fmt.println("  vendor id: ", info.vendorID)
 }

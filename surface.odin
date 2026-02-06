@@ -1,7 +1,6 @@
 package engine
 
 import "vendor:wgpu"
-import "core:fmt"
 
 get_next_surface_data :: proc(surface: wgpu.Surface) -> (surface_texture: wgpu.SurfaceTexture, target_view: wgpu.TextureView) {
     surface_texture = wgpu.SurfaceGetCurrentTexture(surface)
