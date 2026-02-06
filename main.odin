@@ -52,6 +52,12 @@ main :: proc() {
 	fmt.println("Got the adapter")
 	
 	//print_adapter_info(adapter)
+
+	// ========= surface capabilities =========
+	surface_capabilities, status := wgpu.SurfaceGetCapabilities(surface, adapter)
+	if status == .Success {
+		fmt.println("surface capabilities: ", surface_capabilities.formats[0])
+	}
 	
 	// ========= request device =========
 	device := request_device(adapter)
@@ -60,8 +66,29 @@ main :: proc() {
 	}
 	defer wgpu.DeviceRelease(device)
 	fmt.println("Got the device")
-	
-	print_device_info(device)
+	//print_device_info(device)
+
+	// ========= surface configuration =========
+	surface_config : wgpu.SurfaceConfiguration
+	surface_config.nextInChain = nil
+	surface_config.width = 960
+	surface_config.height = 540
+	surface_config.format = surface_capabilities.formats[0]
+	surface_config.viewFormatCount = 0
+	surface_config.viewFormats = nil
+	surface_config.usage = { .RenderAttachment }
+	surface_config.device = device
+	surface_config.presentMode = .Fifo
+	surface_config.alphaMode = .Auto
+
+	wgpu.SurfaceConfigure(surface, &surface_config)
+
+	// ========= surface texture =========
+	surface_texture, target_view := get_next_surface_data(surface)
+	defer wgpu.TextureViewRelease(target_view)
+
+	wgpu.SurfacePresent(surface)
+	wgpu.TextureRelease(surface_texture.texture)
 	
 	// ========= queue =========
 	queue := wgpu.DeviceGetQueue(device)
@@ -69,7 +96,7 @@ main :: proc() {
 	queue_info(queue)
 	command_encoder(device, queue)
 	wgpu.DevicePoll(device, false)
-	
+
 	// ========= infitine loop =========
 	for !glfw.WindowShouldClose(window) {
 		glfw.PollEvents()
