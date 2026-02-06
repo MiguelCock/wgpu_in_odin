@@ -1,17 +1,9 @@
 package engine
 
-import "core:log"
 import "vendor:wgpu"
-import "base:runtime"
 import "core:fmt"
 
-state : struct {
-	ctx: runtime.Context
-}
-
 request_device :: proc(adapter: wgpu.Adapter) -> wgpu.Device {
-	state.ctx = context
-	
 	descriptor : wgpu.DeviceDescriptor
 	descriptor.nextInChain = nil
 	descriptor.label = "cock engine"
