@@ -93,7 +93,10 @@ main :: proc() {
 	wgpu.SurfaceConfigure(surface, &surface_config)
 
 	fmt.println("surface configured")
-
+	
+	pipeline := InitializePipeline(device, surface_capabilities.formats[0])
+	defer wgpu.RenderPipelineRelease(pipeline)
+	fmt.println("pipeline initilize")
 
 	// ========= infitine loop =========
 	for !glfw.WindowShouldClose(window) {
@@ -120,28 +123,28 @@ main :: proc() {
 		//fmt.println("command encoder configured")
 
 		// ========= render pass color attachment =========
-		render_pass_color_attachment: [1]wgpu.RenderPassColorAttachment
-		render_pass_color_attachment[0].view = target_view
-		render_pass_color_attachment[0].resolveTarget = nil
-		render_pass_color_attachment[0].loadOp = .Clear
-		render_pass_color_attachment[0].storeOp = .Store
-		render_pass_color_attachment[0].clearValue = {0.9, 0.1, 0.2, 1}
-		render_pass_color_attachment[0].depthSlice = wgpu.DEPTH_SLICE_UNDEFINED
-
-		rend_pass_col_attc_list: [^]wgpu.RenderPassColorAttachment = raw_data(
-			render_pass_color_attachment[:],
-		)
-
+		render_pass_color_attachment: wgpu.RenderPassColorAttachment
+		render_pass_color_attachment.view = target_view
+		render_pass_color_attachment.resolveTarget = nil
+		render_pass_color_attachment.loadOp = .Clear
+		render_pass_color_attachment.storeOp = .Store
+		render_pass_color_attachment.clearValue = {0.9, 0.1, 0.2, 1}
+		render_pass_color_attachment.depthSlice = wgpu.DEPTH_SLICE_UNDEFINED
+		
 		// ========= render pass descriptor =========
 		render_pass_desc: wgpu.RenderPassDescriptor
 		render_pass_desc.nextInChain = nil
 		render_pass_desc.colorAttachmentCount = 1
-		render_pass_desc.colorAttachments = rend_pass_col_attc_list
+		render_pass_desc.colorAttachments = &render_pass_color_attachment
 		render_pass_desc.depthStencilAttachment = nil
 		render_pass_desc.timestampWrites = nil
 
 		// ========= render pass encoder =========
 		render_pass := wgpu.CommandEncoderBeginRenderPass(encoder, &render_pass_desc)
+		
+		wgpu.RenderPassEncoderSetPipeline(render_pass, pipeline)
+		wgpu.RenderPassEncoderDraw(render_pass, 3, 1, 0, 0)
+		
 		wgpu.RenderPassEncoderEnd(render_pass)
 		wgpu.RenderPassEncoderRelease(render_pass)
 
@@ -152,7 +155,7 @@ main :: proc() {
 		buffer_desc.label = "my command encoder"
 		command := wgpu.CommandEncoderFinish(encoder, &buffer_desc)
 		append(&commands, command)
-		//defer pop(&commands)
+		defer pop(&commands)
 		wgpu.CommandEncoderRelease(encoder)
 
 		//fmt.println("submitting commands...")
