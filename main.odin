@@ -93,7 +93,7 @@ main :: proc() {
 	wgpu.SurfaceConfigure(surface, &surface_config)
 
 	fmt.println("surface configured")
-	
+
 	pipeline := InitializePipeline(device, surface_capabilities.formats[0])
 	defer wgpu.RenderPipelineRelease(pipeline)
 	fmt.println("pipeline initilize")
@@ -121,6 +121,8 @@ main :: proc() {
 		wgpu.CommandEncoderInsertDebugMarker(encoder, "do another thing")
 
 		//fmt.println("command encoder configured")
+		
+		create_buffer(device, queue)
 
 		// ========= render pass color attachment =========
 		render_pass_color_attachment: wgpu.RenderPassColorAttachment
@@ -130,7 +132,7 @@ main :: proc() {
 		render_pass_color_attachment.storeOp = .Store
 		render_pass_color_attachment.clearValue = {0.9, 0.1, 0.2, 1}
 		render_pass_color_attachment.depthSlice = wgpu.DEPTH_SLICE_UNDEFINED
-		
+
 		// ========= render pass descriptor =========
 		render_pass_desc: wgpu.RenderPassDescriptor
 		render_pass_desc.nextInChain = nil
@@ -141,10 +143,10 @@ main :: proc() {
 
 		// ========= render pass encoder =========
 		render_pass := wgpu.CommandEncoderBeginRenderPass(encoder, &render_pass_desc)
-		
+
 		wgpu.RenderPassEncoderSetPipeline(render_pass, pipeline)
 		wgpu.RenderPassEncoderDraw(render_pass, 3, 1, 0, 0)
-		
+
 		wgpu.RenderPassEncoderEnd(render_pass)
 		wgpu.RenderPassEncoderRelease(render_pass)
 
